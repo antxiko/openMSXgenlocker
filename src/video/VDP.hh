@@ -1132,6 +1132,7 @@ private:
 	  */
 	void updateDisplayMode(DisplayMode newMode, bool cmdBit, EmuTime time);
 	void updateHostVideoFrame();
+	void digitizeExternalVideo(const RawFrame& frame, EmuTime time);
 
 	// Observer<Setting>
 	void update(const Setting& setting) noexcept override;
