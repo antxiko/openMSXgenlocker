@@ -47,6 +47,7 @@ private:
 	void paintEditShortcut();
 	void paintExternalVideo();
 	void refreshExternalVideoDevices();
+	void refreshExternalAudioDevices();
 	void startExternalVideo();
 	void stopExternalVideo();
 
@@ -97,6 +98,12 @@ private:
 	std::string externalVideoFrameFile;
 	std::vector<std::string> externalVideoDevices;
 	bool externalVideoActive = false;
+	bool externalAudio = false; // also capture and play the audio of the source
+	std::string externalAudioDevice;
+	std::string externalAudioFile;
+	std::vector<std::string> externalAudioDevices;
+	int externalAudioDelay = 120; // ms
+	int externalAudioGain = 0; // dB, applied when the capture starts
 
 	static constexpr auto persistentElements = std::tuple{
 		PersistentElement{"style", &ImGuiSettings::selectedStyle},
@@ -105,6 +112,10 @@ private:
 		PersistentElement{"externalVideoDevice", &ImGuiSettings::externalVideoDevice},
 		PersistentElement{"externalVideoPython", &ImGuiSettings::externalVideoPython},
 		PersistentElement{"externalVideoFFmpeg", &ImGuiSettings::externalVideoFFmpeg},
+		PersistentElement{"externalAudio", &ImGuiSettings::externalAudio},
+		PersistentElement{"externalAudioDevice", &ImGuiSettings::externalAudioDevice},
+		PersistentElement{"externalAudioDelay", &ImGuiSettings::externalAudioDelay},
+		PersistentElement{"externalAudioGain", &ImGuiSettings::externalAudioGain},
 	};
 };
 

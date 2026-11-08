@@ -1894,6 +1894,35 @@ void ImGuiSettings::refreshExternalVideoDevices()
 	                                                   : "Select a capture device.";
 }
 
+void ImGuiSettings::refreshExternalAudioDevices()
+{
+	auto script = FileOperations::join(FileOperations::getSystemDataDir(),
+	                                  "scripts/external_video_bridge.py");
+	auto directory = FileOperations::join(FileOperations::getUserDataDir(), "external-video");
+	FileOperations::mkdirp(directory);
+	auto listing = FileOperations::join(directory, "audio-devices.txt");
+	if (!FileOperations::exists(script)) return;
+	TclObject command = makeTclList("exec");
+#ifdef _WIN32
+	if (externalVideoPython == "python" || externalVideoPython == "py") {
+		command.addListElement("py", "-3");
+	} else
+#endif
+	{
+		command.addListElement(externalVideoPython);
+	}
+	command.addListElement(script, "--list-audio-devices-file", listing);
+	if (!externalVideoFFmpeg.empty()) {
+		command.addListElement("--ffmpeg", externalVideoFFmpeg);
+	}
+	if (!manager.execute(command)) return;
+	externalAudioDevices.clear();
+	std::ifstream input{listing};
+	for (std::string name; std::getline(input, name); ) {
+		if (!name.empty()) externalAudioDevices.push_back(name);
+	}
+}
+
 void ImGuiSettings::stopExternalVideo()
 {
 	if (!externalVideoStopFile.empty()) {
@@ -1901,6 +1930,10 @@ void ImGuiSettings::stopExternalVideo()
 		externalVideoStopFile.clear();
 	}
 	manager.execute(makeTclList("set", "external_video_file", ""));
+	if (!externalAudioFile.empty()) {
+		manager.execute(makeTclList("set", "external_audio_file", ""));
+		externalAudioFile.clear();
+	}
 	externalVideoActive = false;
 	externalVideoStatus = "External video stopped.";
 }
@@ -1942,6 +1975,16 @@ void ImGuiSettings::startExternalVideo()
 	if (!externalVideoFFmpeg.empty()) {
 		command.addListElement("--ffmpeg", externalVideoFFmpeg);
 	}
+	if (externalAudio) {
+		externalAudioFile = FileOperations::join(directory, "live.pcm");
+		command.addListElement("--audio-output", externalAudioFile);
+		if (externalAudioGain != 0) {
+			command.addListElement("--audio-gain", externalAudioGain);
+		}
+		if (externalVideoSource == 0 && !externalAudioDevice.empty()) {
+			command.addListElement("--audio-device", externalAudioDevice);
+		}
+	}
 	if (externalVideoSource == 0) {
 		command.addListElement("--device", externalVideoDevice);
 	} else {
@@ -1962,6 +2005,14 @@ void ImGuiSettings::startExternalVideo()
 	}
 	externalVideoActive = true;
 	externalVideoStatus = "Capture started. The MSX must enable superimpose.";
+	if (externalAudio) {
+		manager.execute(makeTclList("set", "external_audio_delay", externalAudioDelay));
+		if (!manager.execute(makeTclList("set", "external_audio_file", externalAudioFile))) {
+			externalAudioFile.clear();
+			externalVideoStatus += " This machine has no external audio input: "
+			                       "insert the External_Audio extension.";
+		}
+	}
 }
 
 void ImGuiSettings::paintExternalVideo()
@@ -1983,6 +2034,30 @@ void ImGuiSettings::paintExternalVideo()
 			ImGui::InputText("Device name or path", &externalVideoDevice);
 		} else {
 			ImGui::InputText("Stream URL", &externalVideoUrl);
+		}
+		ImGui::Separator();
+		ImGui::Checkbox("Capture audio", &externalAudio);
+		if (externalAudio) {
+			if (externalVideoSource == 0) {
+				if (externalAudioDevices.empty() && externalAudioDevice.empty()) {
+					refreshExternalAudioDevices();
+				}
+				if (ImGui::Button("Refresh audio devices")) refreshExternalAudioDevices();
+				for (const auto& device : externalAudioDevices) {
+					if (ImGui::Selectable(device.c_str(), externalAudioDevice == device)) {
+						externalAudioDevice = device;
+					}
+				}
+				ImGui::InputText("Audio device", &externalAudioDevice);
+			} else {
+				ImGui::TextUnformatted("The audio of the stream is used.");
+			}
+			ImGui::SliderInt("Audio gain (dB, at Start)", &externalAudioGain, 0, 40);
+			if (ImGui::SliderInt("Audio delay (ms)", &externalAudioDelay, 0, 500) &&
+			    externalVideoActive && !externalAudioFile.empty()) {
+				manager.execute(makeTclList("set", "external_audio_delay", externalAudioDelay));
+			}
+			ImGui::TextUnformatted("The volume is the 'external-audio' slider of the sound settings.");
 		}
 		im::TreeNode("Capture tools", [&]{
 			ImGui::InputText("Python executable", &externalVideoPython);

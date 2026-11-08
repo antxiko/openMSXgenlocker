@@ -36,6 +36,7 @@
 #include "MSXMegaRam.hh"
 #include "MSXMemoryMapper.hh"
 #include "MSXMidi.hh"
+#include "ExternalAudio.hh"
 #include "MSXNMS8280Video.hh"
 #include "SonyHBIV1.hh"
 #include "MSXMirrorDevice.hh"
@@ -278,6 +279,8 @@ std::unique_ptr<MSXDevice> DeviceFactory::create(DeviceConfig& conf)
 		result = std::make_unique<MSXKanji12>(conf);
 	} else if (type == "SonyHBIV1") {
 		result = std::make_unique<SonyHBIV1>(conf);
+	} else if (type == "ExternalAudio") {
+		result = std::make_unique<MSXExternalAudio>(conf);
 	} else if (type == "NMS8280Video") {
 		result = std::make_unique<MSXNMS8280Video>(conf);
 	} else if (type == "MSX-MIDI") {
