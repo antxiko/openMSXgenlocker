@@ -188,6 +188,14 @@ public:
 	  * the VDP image half-for-half instead of superimposing. Only has an
 	  * effect while superimposing.
 	  */
+	/** The external video frame that is available (if any): from the
+	  * external video source or from the host video file setting. Used by
+	  * devices that digitize video (like the Sony HBI-V1).
+	  */
+	[[nodiscard]] const RawFrame* getExternalVideoFrame() const {
+		return externalVideo ? externalVideo : hostVideoFrame.get();
+	}
+
 	[[nodiscard]] bool isVideoMix() const { return videoMix; }
 	void setVideoMix(bool value) { videoMix = value; }
 
