@@ -184,6 +184,20 @@ public:
 		return superimposing;
 	}
 
+	/** Video mix (NMS 8280 port 0xF6, bit 5): show the external video and
+	  * the VDP image half-for-half instead of superimposing. Only has an
+	  * effect while superimposing.
+	  */
+	[[nodiscard]] bool isVideoMix() const { return videoMix; }
+	void setVideoMix(bool value) { videoMix = value; }
+
+	/** How the VDP image is combined with the external video this frame:
+	  * 0 = normal (alpha, color 0 transparent), 1 = superimpose at 50%
+	  * (transparent areas stay full video), 2 = 50/50 mix of the complete
+	  * images (digitize mode with video mix). Fixed per frame.
+	  */
+	[[nodiscard]] int getSuperimposeMixMode() const { return superimposeMixMode; }
+
 	/** Get the sprite checker for this VDP.
 	  */
 	[[nodiscard]] SpriteChecker& getSpriteChecker() {
@@ -1262,6 +1276,8 @@ private:
 	 * changes at most once per frame (at the beginning of the frame).
 	 */
 	const RawFrame* superimposing;
+	bool videoMix = false;
+	int superimposeMixMode = 0;
 
 	/** The emulation time when this frame was started (vsync).
 	  */

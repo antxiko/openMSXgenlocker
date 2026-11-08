@@ -768,6 +768,20 @@ void VDP::frameStart(EmuTime time)
 	bool enableSuperimpose = isMSX1VDP() ? (controlRegs[0] & 1)
 		: (((controlRegs[9] & 0x30) == 0x10) &&
 		   ((controlRegs[8] & 0x20) == 0));
+	// Video mix (NMS 8280, port 0xF6 bit 5), only with external sync
+	// (R#9 S1:S0 = 01, as used by SET VIDEO 1 and 2). With an opaque
+	// computer image (R#8 TP = 1, SET VIDEO 1: digitize mode) both complete
+	// images are shown half-for-half; when superimposing (TP = 0,
+	// SET VIDEO 2) the computer image is halved over the full video.
+	superimposeMixMode = 0;
+	if (videoMix && !isMSX1VDP() && ((controlRegs[9] & 0x30) == 0x10)) {
+		if (controlRegs[8] & 0x20) {
+			enableSuperimpose = true;
+			superimposeMixMode = 2;
+		} else if (enableSuperimpose) {
+			superimposeMixMode = 1;
+		}
+	}
 	if (const RawFrame* newSuperimposing = enableSuperimpose ? videoInput : nullptr;
 	    superimposing != newSuperimposing) {
 		superimposing = newSuperimposing;

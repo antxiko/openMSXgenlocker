@@ -36,6 +36,7 @@
 #include "MSXMegaRam.hh"
 #include "MSXMemoryMapper.hh"
 #include "MSXMidi.hh"
+#include "MSXNMS8280Video.hh"
 #include "MSXMirrorDevice.hh"
 #include "MSXModem.hh"
 #include "MSXMoonSound.hh"
@@ -274,6 +275,8 @@ std::unique_ptr<MSXDevice> DeviceFactory::create(DeviceConfig& conf)
 		result = std::make_unique<MSXCielTurbo>(conf);
 	} else if (type == "Kanji12") {
 		result = std::make_unique<MSXKanji12>(conf);
+	} else if (type == "NMS8280Video") {
+		result = std::make_unique<MSXNMS8280Video>(conf);
 	} else if (type == "MSX-MIDI") {
 		result = std::make_unique<MSXMidi>(conf);
 	} else if (type == "MSX-Modem") {

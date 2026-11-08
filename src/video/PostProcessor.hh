@@ -66,6 +66,12 @@ public:
 		superImposeVideoFrame = videoSource;
 	}
 
+	/** How the external video (see above) is combined with the output:
+	  * 0 = normal alpha blend, 1 = opaque pixels at 50% over the video,
+	  * 2 = 50/50 mix of both complete images. Only used by the GL scalers.
+	  */
+	void setSuperimposeMix(int mode) { superImposeMix = mode; }
+
 	/** Set the VDP frame on which to superimpose the 'normal' output of
 	  * this PostProcessor. This is similar to the method above, except
 	  * that now the superimposing is done before scaling. IOW both frames
@@ -164,6 +170,7 @@ private:
 	  * nullptr when not superimposing. */
 	const RawFrame* superImposeVideoFrame = nullptr;
 	const FrameSource* superImposeVdpFrame = nullptr;
+	int superImposeMix = 0;
 
 	int interleaveCount = 0; // for interleave-black-frame
 	int lastFramesCount = 0; // How many items in lastFrames[] are up-to-date

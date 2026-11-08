@@ -49,6 +49,10 @@ public:
 		unsigned srcStartY, unsigned srcEndY,
 		unsigned lineWidth, FrameSource& paintFrame);
 
+	/** Mode of combining the VDP image with the superimposed external video:
+	  * 0 = alpha blend, 1 = opaque pixels at 50%, 2 = 50/50 mix. */
+	void setSuperimposeMix(int mode) { superMix = mode; }
+
 protected:
 	explicit GLScaler(const std::string& progName);
 
@@ -85,6 +89,8 @@ protected:
 	std::array<gl::ShaderProgram, 2> program;
 	std::array<GLint, 2> unifTexSize;
 	std::array<GLint, 2> unifMvpMatrix;
+	std::array<GLint, 2> unifSuperMix;
+	int superMix = 0;
 };
 
 } // namespace openmsx

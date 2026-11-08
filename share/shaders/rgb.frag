@@ -1,5 +1,7 @@
 uniform sampler2D tex;
 uniform sampler2D videoTex;
+uniform float superMix; // 0: alpha, 1: opaque at 50%, 2: 50/50 mix
+float superAlpha(float a) { return superMix > 1.5 ? 0.5 : (superMix > 0.5 ? a * 0.5 : a); }
 uniform vec4 cnsts;
 
 varying vec4 scaled;
@@ -27,7 +29,7 @@ void main()
 	vec4 col = texture2D(tex, pos);
 #if SUPERIMPOSE
 	vec4 vid = texture2D(videoTex, videoCoord);
-	vec4 p = mix(vid, col, col.a);
+	vec4 p = mix(vid, col, superAlpha(col.a));
 #else
 	vec4 p = col;
 #endif
