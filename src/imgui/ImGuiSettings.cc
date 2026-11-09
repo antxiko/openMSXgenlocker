@@ -1917,9 +1917,14 @@ void ImGuiSettings::refreshExternalAudioDevices()
 	}
 	if (!manager.execute(command)) return;
 	externalAudioDevices.clear();
+	externalAudioLabels.clear();
 	std::ifstream input{listing};
-	for (std::string name; std::getline(input, name); ) {
-		if (!name.empty()) externalAudioDevices.push_back(name);
+	for (std::string line; std::getline(input, line); ) {
+		if (line.empty()) continue;
+		// "name" or "name<TAB>friendly description"
+		auto tab = line.find('\t');
+		externalAudioDevices.push_back(line.substr(0, tab));
+		externalAudioLabels.push_back(tab == std::string::npos ? line : line.substr(tab + 1));
 	}
 }
 
@@ -2043,12 +2048,18 @@ void ImGuiSettings::paintExternalVideo()
 					refreshExternalAudioDevices();
 				}
 				if (ImGui::Button("Refresh audio devices")) refreshExternalAudioDevices();
-				for (const auto& device : externalAudioDevices) {
-					if (ImGui::Selectable(device.c_str(), externalAudioDevice == device)) {
+				for (auto i : xrange(externalAudioDevices.size())) {
+					const auto& device = externalAudioDevices[i];
+					if (ImGui::Selectable(externalAudioLabels[i].c_str(), externalAudioDevice == device)) {
 						externalAudioDevice = device;
 					}
+					simpleToolTip(device);
 				}
-				ImGui::InputText("Audio device", &externalAudioDevice);
+				std::string_view shown = externalAudioDevice;
+				for (auto i : xrange(externalAudioDevices.size())) {
+					if (externalAudioDevices[i] == externalAudioDevice) shown = externalAudioLabels[i];
+				}
+				ImGui::Text("Selected: %s", shown.empty() ? "(default)" : std::string(shown).c_str());
 			} else {
 				ImGui::TextUnformatted("The audio of the stream is used.");
 			}
@@ -2062,6 +2073,7 @@ void ImGuiSettings::paintExternalVideo()
 		im::TreeNode("Capture tools", [&]{
 			ImGui::InputText("Python executable", &externalVideoPython);
 			ImGui::InputText("FFmpeg executable", &externalVideoFFmpeg);
+			ImGui::InputText("Audio device name", &externalAudioDevice);
 			ImGui::TextUnformatted("Leave FFmpeg empty for automatic detection.");
 		});
 		if (ImGui::Button(externalVideoActive ? "Switch source" : "Start")) startExternalVideo();

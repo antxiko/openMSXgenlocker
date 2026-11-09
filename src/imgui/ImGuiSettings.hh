@@ -101,7 +101,8 @@ private:
 	bool externalAudio = false; // also capture and play the audio of the source
 	std::string externalAudioDevice;
 	std::string externalAudioFile;
-	std::vector<std::string> externalAudioDevices;
+	std::vector<std::string> externalAudioDevices; // names, as the bridge expects them
+	std::vector<std::string> externalAudioLabels;  // friendly names to show
 	int externalAudioDelay = 120; // ms
 	int externalAudioGain = 0; // dB, applied when the capture starts
 

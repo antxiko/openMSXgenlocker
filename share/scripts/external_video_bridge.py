@@ -115,15 +115,45 @@ def audio_device_arguments(device: str) -> list[str]:
 
 def list_audio_devices(ffmpeg: str, output: Path | None = None) -> int:
     backend = capture_backend()
+    # One device per entry: "name" or "name<TAB>friendly description". The name
+    # is what --audio-device expects.
     devices: list[str] = []
     if backend == "v4l2":
         try:
-            result = subprocess.run(["pactl", "list", "short", "sources"],
+            result = subprocess.run(["pactl", "list", "sources"],
                                     capture_output=True, text=True, errors="replace")
+            name = description = active = None
+            ports: dict[str, str] = {}
+
+            def flush() -> None:
+                if name and not name.endswith(".monitor"):
+                    # "Internal Microphone - Built-in Audio Analog Stereo"
+                    label = " - ".join(x for x in (ports.get(active or ""), description) if x)
+                    devices.append(f"{name}\t{label}" if label else name)
+
+            in_ports = False
             for line in result.stdout.splitlines():
-                columns = line.split("\t")
-                if len(columns) > 1 and not columns[1].endswith(".monitor"):
-                    devices.append(columns[1])
+                stripped = line.strip()
+                if stripped.startswith("Source #"):
+                    flush()
+                    name = description = active = None
+                    ports = {}
+                    in_ports = False
+                elif stripped.startswith("Name:"):
+                    name = stripped[len("Name:"):].strip()
+                elif stripped.startswith("Description:"):
+                    description = stripped[len("Description:"):].strip()
+                elif stripped.startswith("Active Port:"):
+                    active = stripped[len("Active Port:"):].strip()
+                    in_ports = False
+                elif stripped == "Ports:":
+                    in_ports = True
+                elif in_ports and ": " in stripped and "(type:" in stripped:
+                    port, rest = stripped.split(": ", 1)
+                    ports[port] = rest.split(" (type:")[0].strip()
+                elif in_ports and not stripped:
+                    in_ports = False
+            flush()
         except FileNotFoundError:
             devices = []
     else:
@@ -143,7 +173,7 @@ def list_audio_devices(ffmpeg: str, output: Path | None = None) -> int:
     if output:
         output.write_text("\n".join(devices), encoding="utf-8")
     else:
-        print("Audio devices:", *devices, sep="\n")
+        print("Audio devices:", *(d.replace("\t", "   ") for d in devices), sep="\n")
     return 0
 
 
