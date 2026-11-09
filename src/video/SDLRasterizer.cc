@@ -182,6 +182,7 @@ void SDLRasterizer::setSuperimposeVideoFrame(const RawFrame* videoSource)
 void SDLRasterizer::frameStart(EmuTime time)
 {
 	postProcessor->setSuperimposeMix(vdp.getSuperimposeMixMode());
+	postProcessor->setSuperimposeVideoGain(vdp.isVideoDim() ? 0.5f : 1.0f);
 	workFrame = postProcessor->rotateFrames(std::move(workFrame), time);
 	workFrame->init(
 	    vdp.isInterlaced() ? (vdp.getEvenOdd() ? FrameSource::FieldType::ODD

@@ -2,8 +2,9 @@
 
 uniform sampler2D tex;
 uniform sampler2D videoTex;
-uniform float superMix; // 0: alpha, 1: opaque at 50%, 2: 50/50 mix
-float superAlpha(float a) { return superMix > 1.5 ? 0.5 : (superMix > 0.5 ? a * 0.5 : a); }
+uniform float superMix; // 0: alpha, 1: opaque at 50%, 2: 50/50 mix, 3: video only
+uniform float videoGain; // intensity of the external video
+float superAlpha(float a) { return superMix > 2.5 ? 0.0 : (superMix > 1.5 ? 0.5 : (superMix > 0.5 ? a * 0.5 : a)); }
 uniform float minScanline;
 uniform float sizeVariance;
 
@@ -18,6 +19,7 @@ vec4 calcCorner(const vec2 texCoord0,
 	vec4 col0 = texture2D(tex, texCoord0);
 #if SUPERIMPOSE
 	vec4 vid = texture2D(videoTex, texCoord1);
+	vid.rgb *= videoGain;
 	vec4 col = mix(vid, col0, superAlpha(col0.a));
 #else
 	vec4 col = col0;

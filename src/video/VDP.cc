@@ -774,7 +774,18 @@ void VDP::frameStart(EmuTime time)
 	// images are shown half-for-half; when superimposing (TP = 0,
 	// SET VIDEO 2) the computer image is halved over the full video.
 	superimposeMixMode = 0;
-	if (videoMix && !isMSX1VDP() && ((controlRegs[9] & 0x30) == 0x10)) {
+	// External video only: R#9 S1:S0 = 10 (SET VIDEO 3), or the color bus in
+	// input mode (R#8 CB = 1, MS = 0), in the bitmap modes.
+	const auto base = displayMode.getBase();
+	const bool bitmapMode = base == one_of(DisplayMode::GRAPHIC4, DisplayMode::GRAPHIC5,
+	                                       DisplayMode::GRAPHIC6, DisplayMode::GRAPHIC7);
+	const bool externalOnly = !isMSX1VDP() &&
+		(((controlRegs[9] & 0x30) == 0x20) ||
+		 (bitmapMode && !(controlRegs[8] & 0x80) && (controlRegs[8] & 0x10)));
+	if (externalOnly) {
+		enableSuperimpose = true;
+		superimposeMixMode = 3;
+	} else if (videoMix && !isMSX1VDP() && ((controlRegs[9] & 0x30) == 0x10)) {
 		if (controlRegs[8] & 0x20) {
 			enableSuperimpose = true;
 			superimposeMixMode = 2;

@@ -3,12 +3,14 @@
 #include "ExternalAudio.hh"
 #include "MSXMotherBoard.hh"
 #include "VDP.hh"
+#include "outer.hh"
 #include "serialize.hh"
 
 namespace openmsx {
 
 MSXNMS8280Video::MSXNMS8280Video(const DeviceConfig& config)
 	: MSXDevice(config)
+	, debuggable(getMotherBoard(), getName() + " ports")
 {
 	reset(EmuTime::dummy());
 }
@@ -27,6 +29,7 @@ void MSXNMS8280Video::applyVideoMix() const
 	// The VDP might not exist yet while this device is being constructed.
 	if (auto* vdp = dynamic_cast<VDP*>(getMotherBoard().findDevice("VDP"))) {
 		vdp->setVideoMix((portF6 & 0x20) == 0);
+		vdp->setVideoDim((portF7 & 0x20) != 0);
 	}
 }
 
@@ -64,6 +67,7 @@ void MSXNMS8280Video::writeIO(uint16_t port, byte value, EmuTime time)
 		break;
 	case 0xF7:
 		portF7 = value;
+		applyVideoMix(); // also the dimming of the video
 		applyAudioRouting(time);
 		break;
 	case 0xF8:
@@ -72,6 +76,30 @@ void MSXNMS8280Video::writeIO(uint16_t port, byte value, EmuTime time)
 	default:
 		break;
 	}
+}
+
+// Debuggable
+
+MSXNMS8280Video::Debuggable::Debuggable(MSXMotherBoard& motherBoard_, const std::string& name_)
+	: SimpleDebuggable(motherBoard_, name_,
+	                   "Latches of the video control ports 0xF6, 0xF7 and 0xF8", 3)
+{
+}
+
+byte MSXNMS8280Video::Debuggable::read(unsigned address)
+{
+	const auto& device = OUTER(MSXNMS8280Video, debuggable);
+	switch (address) {
+	case 0: return device.portF6;
+	case 1: return device.portF7;
+	case 2: return device.portF8;
+	default: return 0xFF;
+	}
+}
+
+void MSXNMS8280Video::Debuggable::write(unsigned /*address*/, byte /*value*/)
+{
+	// read-only: the ports are written by the MSX software
 }
 
 template<typename Archive>

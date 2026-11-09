@@ -53,6 +53,9 @@ public:
 	  * 0 = alpha blend, 1 = opaque pixels at 50%, 2 = 50/50 mix. */
 	void setSuperimposeMix(int mode) { superMix = mode; }
 
+	/** Intensity (0..1) of the superimposed external video. */
+	void setSuperimposeVideoGain(float gain) { videoGain = gain; }
+
 protected:
 	explicit GLScaler(const std::string& progName);
 
@@ -90,7 +93,9 @@ protected:
 	std::array<GLint, 2> unifTexSize;
 	std::array<GLint, 2> unifMvpMatrix;
 	std::array<GLint, 2> unifSuperMix;
+	std::array<GLint, 2> unifVideoGain;
 	int superMix = 0;
+	float videoGain = 1.0f;
 };
 
 } // namespace openmsx

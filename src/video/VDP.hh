@@ -199,10 +199,17 @@ public:
 	[[nodiscard]] bool isVideoMix() const { return videoMix; }
 	void setVideoMix(bool value) { videoMix = value; }
 
+	/** Dim the external video to half its intensity (the 'Ym' parameter of
+	  * SET VIDEO, bit 5 of port 0xF7 of the NMS 8280).
+	  */
+	[[nodiscard]] bool isVideoDim() const { return videoDim; }
+	void setVideoDim(bool value) { videoDim = value; }
+
 	/** How the VDP image is combined with the external video this frame:
 	  * 0 = normal (alpha, color 0 transparent), 1 = superimpose at 50%
 	  * (transparent areas stay full video), 2 = 50/50 mix of the complete
-	  * images (digitize mode with video mix). Fixed per frame.
+	  * images (digitize mode with video mix), 3 = only the external video
+	  * (SET VIDEO 3, or the color bus input of R#8). Fixed per frame.
 	  */
 	[[nodiscard]] int getSuperimposeMixMode() const { return superimposeMixMode; }
 
@@ -1285,6 +1292,7 @@ private:
 	 */
 	const RawFrame* superimposing;
 	bool videoMix = false;
+	bool videoDim = false;
 	int superimposeMixMode = 0;
 
 	/** The emulation time when this frame was started (vsync).

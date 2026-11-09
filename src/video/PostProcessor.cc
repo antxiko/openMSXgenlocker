@@ -292,6 +292,7 @@ void PostProcessor::paint(OutputSurface& /*output*/)
 		auto* superImpose = superImposeVideoFrame
 		                  ? &superImposeTex : nullptr;
 		currScaler->setSuperimposeMix(superImposeMix);
+		currScaler->setSuperimposeVideoGain(superImposeVideoGain);
 		currScaler->scaleImage(
 			it->tex, superImpose,
 			r.srcStartY, r.srcEndY, r.lineWidth, // src
