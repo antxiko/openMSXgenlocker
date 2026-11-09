@@ -105,6 +105,7 @@ private:
 	std::vector<std::string> externalAudioLabels;  // friendly names to show
 	int externalAudioDelay = 120; // ms
 	int externalAudioGain = 0; // dB, applied when the capture starts
+	int externalAudioMix = 50; // 0: computer (INT) only, 100: external (EXT) only
 
 	static constexpr auto persistentElements = std::tuple{
 		PersistentElement{"style", &ImGuiSettings::selectedStyle},
@@ -117,6 +118,7 @@ private:
 		PersistentElement{"externalAudioDevice", &ImGuiSettings::externalAudioDevice},
 		PersistentElement{"externalAudioDelay", &ImGuiSettings::externalAudioDelay},
 		PersistentElement{"externalAudioGain", &ImGuiSettings::externalAudioGain},
+		PersistentElement{"externalAudioMix", &ImGuiSettings::externalAudioMix},
 	};
 };
 

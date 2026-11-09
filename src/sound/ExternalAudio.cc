@@ -7,6 +7,7 @@
 #include "IntegerSetting.hh"
 #include "MSXMotherBoard.hh"
 #include "MSXMixer.hh"
+#include "Observer.hh"
 #include "SoundDevice.hh"
 #include "XMLElement.hh"
 #include "serialize.hh"
@@ -40,13 +41,14 @@ static constexpr unsigned HEADER_SIZE  = 32;
 static constexpr unsigned FRAME_BYTES  = 4; // 2 channels * 16 bit
 static constexpr int      DEFAULT_DELAY_MS = 120;
 
-class ExternalAudioSound final : public SoundDevice
+class ExternalAudioSound final : public SoundDevice, private Observer<Setting>
 {
 public:
 	explicit ExternalAudioSound(MSXMotherBoard& motherBoard);
 	~ExternalAudioSound();
 
 	// SoundDevice
+	[[nodiscard]] bool isExternalSource() const override { return true; }
 	void setOutputRate(unsigned hostSampleRate, double speed) override;
 	bool updateBuffer(size_t length, float* buffer, EmuTime /*time*/) override {
 		return mixChannels(buffer, length);
@@ -59,14 +61,21 @@ protected:
 	void generateChannels(std::span<float*> buffers, unsigned num) override;
 
 private:
+	// Observer<Setting>
+	void update(const Setting& setting) noexcept override;
+	void applyMix();
+
 	[[nodiscard]] bool ensureOpen();
 	[[nodiscard]] bool readWritePosition(uint64_t& result);
 	[[nodiscard]] bool readFrames(uint64_t first, size_t count);
 	void closeFile();
 
 private:
+	MSXMixer& mixer;
 	FilenameSetting fileSetting;
 	IntegerSetting delaySetting;
+	IntegerSetting mixSetting;
+	float externalGain = 1.0f; // from the mix slider
 
 	std::ifstream file;
 	std::string openedName;
@@ -101,19 +110,43 @@ static DeviceConfig makeConfig(MSXMotherBoard& motherBoard)
 ExternalAudioSound::ExternalAudioSound(MSXMotherBoard& motherBoard)
 	: SoundDevice(motherBoard.getMSXMixer(), "external-audio",
 	              "Audio of the external video source", 1, 44100, true)
+	, mixer(motherBoard.getMSXMixer())
 	, fileSetting(motherBoard.getCommandController(), "external_audio_file",
 	              "ring buffer file with the audio of the external video "
 	              "source, written by the external video bridge", "")
 	, delaySetting(motherBoard.getCommandController(), "external_audio_delay",
 	               "delay in milliseconds of the audio of the external "
 	               "video source", DEFAULT_DELAY_MS, 0, 1000)
+	, mixSetting(motherBoard.getCommandController(), "external_audio_mix",
+	             "audio mix slider: 0 = only the sound of the computer (INT), "
+	             "50 = both at full level, 100 = only the external audio (EXT)",
+	             50, 0, 100)
 {
 	registerSound(makeConfig(motherBoard));
+	mixSetting.attach(*this);
+	applyMix();
 }
 
 ExternalAudioSound::~ExternalAudioSound()
 {
+	mixSetting.detach(*this);
+	mixer.setInternalGain(1.0f);
 	unregisterSound();
+}
+
+void ExternalAudioSound::update(const Setting& setting) noexcept
+{
+	if (&setting == &mixSetting) applyMix();
+}
+
+// The slider of the NMS 8280 mixes the external audio (EXT) and the sound of
+// the computer (INT); without external audio it works as the volume of the
+// computer. The middle position plays both at full level.
+void ExternalAudioSound::applyMix()
+{
+	const float position = float(mixSetting.getInt()) * 0.01f;
+	externalGain = std::clamp(2.0f * position, 0.0f, 1.0f);
+	mixer.setInternalGain(std::clamp(2.0f * (1.0f - position), 0.0f, 1.0f));
 }
 
 void ExternalAudioSound::closeFile()
@@ -291,7 +324,7 @@ void ExternalAudioSound::generateChannels(std::span<float*> buffers, unsigned nu
 		return;
 	}
 
-	constexpr float SCALE = 1.0f / 32768.0f;
+	const float SCALE = externalGain * (1.0f / 32768.0f);
 	auto sample = [&](size_t index, unsigned channel) {
 		return float(scratch[index * 2 + channel]) * SCALE;
 	};

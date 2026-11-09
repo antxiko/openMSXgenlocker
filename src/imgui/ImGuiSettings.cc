@@ -2012,6 +2012,7 @@ void ImGuiSettings::startExternalVideo()
 	externalVideoStatus = "Capture started. The MSX must enable superimpose.";
 	if (externalAudio) {
 		manager.execute(makeTclList("set", "external_audio_delay", externalAudioDelay));
+		manager.execute(makeTclList("set", "external_audio_mix", externalAudioMix));
 		if (!manager.execute(makeTclList("set", "external_audio_file", externalAudioFile))) {
 			externalAudioFile.clear();
 			externalVideoStatus += " This machine has no external audio input: "
@@ -2068,7 +2069,14 @@ void ImGuiSettings::paintExternalVideo()
 			    externalVideoActive && !externalAudioFile.empty()) {
 				manager.execute(makeTclList("set", "external_audio_delay", externalAudioDelay));
 			}
-			ImGui::TextUnformatted("The volume is the 'external-audio' slider of the sound settings.");
+			ImGui::TextUnformatted("Audio mix:   INT (computer)  <->  EXT (external)");
+			if (ImGui::SliderInt("##externalAudioMix", &externalAudioMix, 0, 100)) {
+				manager.execute(makeTclList("set", "external_audio_mix", externalAudioMix));
+			}
+			simpleToolTip("0 = only the sound of the computer, 50 = both at full level, "
+			              "100 = only the external audio. Without external audio it works as "
+			              "the volume of the computer sound (like the slider of the NMS 8280).");
+			ImGui::TextUnformatted("The level of the external audio is also the 'external-audio' slider of the sound settings.");
 		}
 		im::TreeNode("Capture tools", [&]{
 			ImGui::InputText("Python executable", &externalVideoPython);
