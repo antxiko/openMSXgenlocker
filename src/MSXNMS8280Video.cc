@@ -1,5 +1,6 @@
 #include "MSXNMS8280Video.hh"
 
+#include "ExternalAudio.hh"
 #include "MSXMotherBoard.hh"
 #include "VDP.hh"
 #include "serialize.hh"
@@ -12,12 +13,13 @@ MSXNMS8280Video::MSXNMS8280Video(const DeviceConfig& config)
 	reset(EmuTime::dummy());
 }
 
-void MSXNMS8280Video::reset(EmuTime /*time*/)
+void MSXNMS8280Video::reset(EmuTime time)
 {
 	portF6 = 0xFF; // video mix off
 	portF7 = 0xFF;
 	portF8 = 0x00;
 	applyVideoMix();
+	applyAudioRouting(time);
 }
 
 void MSXNMS8280Video::applyVideoMix() const
@@ -25,6 +27,15 @@ void MSXNMS8280Video::applyVideoMix() const
 	// The VDP might not exist yet while this device is being constructed.
 	if (auto* vdp = dynamic_cast<VDP*>(getMotherBoard().findDevice("VDP"))) {
 		vdp->setVideoMix((portF6 & 0x20) == 0);
+	}
+}
+
+void MSXNMS8280Video::applyAudioRouting(EmuTime time) const
+{
+	// bit 1 = 0: external audio in the left channel, bit 0 = 0: in the right one
+	if (auto* audio = dynamic_cast<MSXExternalAudio*>(
+	        getMotherBoard().findDevice("External audio"))) {
+		audio->setRouting((portF7 & 0x02) == 0, (portF7 & 0x01) == 0, time);
 	}
 }
 
@@ -44,7 +55,7 @@ byte MSXNMS8280Video::peekIO(uint16_t port, EmuTime /*time*/) const
 	}
 }
 
-void MSXNMS8280Video::writeIO(uint16_t port, byte value, EmuTime /*time*/)
+void MSXNMS8280Video::writeIO(uint16_t port, byte value, EmuTime time)
 {
 	switch (port & 0xFF) {
 	case 0xF6:
@@ -53,6 +64,7 @@ void MSXNMS8280Video::writeIO(uint16_t port, byte value, EmuTime /*time*/)
 		break;
 	case 0xF7:
 		portF7 = value;
+		applyAudioRouting(time);
 		break;
 	case 0xF8:
 		portF8 = value;
@@ -71,6 +83,7 @@ void MSXNMS8280Video::serialize(Archive& ar, unsigned /*version*/)
 	             "portF8", portF8);
 	if constexpr (Archive::IS_LOADER) {
 		applyVideoMix();
+		applyAudioRouting(getCurrentTime());
 	}
 }
 INSTANTIATE_SERIALIZE_METHODS(MSXNMS8280Video);

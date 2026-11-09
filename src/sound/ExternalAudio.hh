@@ -3,6 +3,8 @@
 
 #include "MSXDevice.hh"
 
+#include "EmuTime.hh"
+
 #include <memory>
 
 namespace openmsx {
@@ -22,6 +24,11 @@ class ExternalAudioSound;
   *    long after it was captured; it absorbs the difference in timing between
   *    the capture clock and the emulation, and it can be used to line up the
   *    sound with the (also delayed) video.
+  *  - external_audio_mix: the audio mix slider (0 = computer only, 50 = both,
+  *    100 = external audio only).
+  *  - external_audio_follow_set_video: obey the audio routing of the BASIC
+  *    command SET VIDEO (port 0xF7 of the NMS 8280), which after a reset
+  *    mixes in no external audio at all. Off by default.
   *  - external-audio_volume and external-audio_balance: the usual settings of
   *    a sound device.
   */
@@ -30,6 +37,12 @@ class MSXExternalAudio final : public MSXDevice
 public:
 	explicit MSXExternalAudio(const DeviceConfig& config);
 	~MSXExternalAudio() override;
+
+	/** Which channels of the external audio are mixed in. Set from the audio
+	  * routing bits of the video control port of the NMS 8280 (0xF7). It only
+	  * has an effect if the setting 'external_audio_follow_set_video' is on.
+	  */
+	void setRouting(bool left, bool right, EmuTime time);
 
 	template<typename Archive>
 	void serialize(Archive& ar, unsigned version);

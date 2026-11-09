@@ -2013,6 +2013,7 @@ void ImGuiSettings::startExternalVideo()
 	if (externalAudio) {
 		manager.execute(makeTclList("set", "external_audio_delay", externalAudioDelay));
 		manager.execute(makeTclList("set", "external_audio_mix", externalAudioMix));
+		manager.execute(makeTclList("set", "external_audio_follow_set_video", externalAudioFollow));
 		if (!manager.execute(makeTclList("set", "external_audio_file", externalAudioFile))) {
 			externalAudioFile.clear();
 			externalVideoStatus += " This machine has no external audio input: "
@@ -2076,6 +2077,12 @@ void ImGuiSettings::paintExternalVideo()
 			simpleToolTip("0 = only the sound of the computer, 50 = both at full level, "
 			              "100 = only the external audio. Without external audio it works as "
 			              "the volume of the computer sound (like the slider of the NMS 8280).");
+			if (ImGui::Checkbox("Obey SET VIDEO audio routing", &externalAudioFollow)) {
+				manager.execute(makeTclList("set", "external_audio_follow_set_video", externalAudioFollow));
+			}
+			simpleToolTip("Off: the external audio is always played. On: like the real NMS 8280, "
+			              "no external audio is mixed in after a reset until the audio parameter "
+			              "of SET VIDEO (the fifth one, e.g. SET VIDEO ,,,,3) selects the channels.");
 			ImGui::TextUnformatted("The level of the external audio is also the 'external-audio' slider of the sound settings.");
 		}
 		im::TreeNode("Capture tools", [&]{

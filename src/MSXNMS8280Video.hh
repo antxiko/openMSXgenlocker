@@ -13,11 +13,14 @@ namespace openmsx {
   *    DIZ/YMIX/B-W outputs go to the analog unit).
   *  - 0xF7 ("mode select 2"): bits 7:6 are the inverted S1:S0 bits of VDP R#9
   *    (they drive the mode indicators), the other bits select the
-  *    external video/audio routing. The sub-ROM reads this port back at boot to
-  *    detect the hardware.
+  *    external video/audio routing. Bits 1 and 0 mix the external audio in
+  *    the left and right channel (0 = mixed in; the audio parameter of
+  *    SET VIDEO gives the inverse of these bits). The sub-ROM reads this port
+  *    back at boot to detect the hardware.
   *  - 0xF8: audio mix control (written by the sub-ROM, shadow in 0xFFF8).
-  * Only the 50% video mix has an effect on the emulation for now; the other
-  * bits are just stored and can be read back.
+  * The 50% video mix and the routing of the external audio (see the External
+  * Audio device) have an effect on the emulation; the other bits are just
+  * stored and can be read back.
   */
 class MSXNMS8280Video final : public MSXDevice
 {
@@ -34,6 +37,7 @@ public:
 
 private:
 	void applyVideoMix() const;
+	void applyAudioRouting(EmuTime time) const;
 
 private:
 	byte portF6 = 0xFF;

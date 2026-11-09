@@ -106,6 +106,7 @@ private:
 	int externalAudioDelay = 120; // ms
 	int externalAudioGain = 0; // dB, applied when the capture starts
 	int externalAudioMix = 50; // 0: computer (INT) only, 100: external (EXT) only
+	bool externalAudioFollow = false; // obey the audio routing of SET VIDEO
 
 	static constexpr auto persistentElements = std::tuple{
 		PersistentElement{"style", &ImGuiSettings::selectedStyle},
@@ -119,6 +120,7 @@ private:
 		PersistentElement{"externalAudioDelay", &ImGuiSettings::externalAudioDelay},
 		PersistentElement{"externalAudioGain", &ImGuiSettings::externalAudioGain},
 		PersistentElement{"externalAudioMix", &ImGuiSettings::externalAudioMix},
+		PersistentElement{"externalAudioFollow", &ImGuiSettings::externalAudioFollow},
 	};
 };
 

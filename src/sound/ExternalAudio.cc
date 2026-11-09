@@ -1,6 +1,7 @@
 #include "ExternalAudio.hh"
 
 #include "DeviceConfig.hh"
+#include "BooleanSetting.hh"
 #include "FilenameSetting.hh"
 #include "FileOperations.hh"
 #include "HardwareConfig.hh"
@@ -50,6 +51,11 @@ public:
 	// SoundDevice
 	[[nodiscard]] bool isExternalSource() const override { return true; }
 	void setOutputRate(unsigned hostSampleRate, double speed) override;
+	void setRouting(bool left, bool right, EmuTime time) {
+		updateStream(time); // the audio until now was routed in the old way
+		routeLeft = left;
+		routeRight = right;
+	}
 	bool updateBuffer(size_t length, float* buffer, EmuTime /*time*/) override {
 		return mixChannels(buffer, length);
 	}
@@ -75,7 +81,10 @@ private:
 	FilenameSetting fileSetting;
 	IntegerSetting delaySetting;
 	IntegerSetting mixSetting;
+	BooleanSetting followSetting;
 	float externalGain = 1.0f; // from the mix slider
+	bool routeLeft = true;     // from the audio routing bits of port 0xF7
+	bool routeRight = true;
 
 	std::ifstream file;
 	std::string openedName;
@@ -121,6 +130,11 @@ ExternalAudioSound::ExternalAudioSound(MSXMotherBoard& motherBoard)
 	             "audio mix slider: 0 = only the sound of the computer (INT), "
 	             "50 = both at full level, 100 = only the external audio (EXT)",
 	             50, 0, 100)
+	, followSetting(motherBoard.getCommandController(), "external_audio_follow_set_video",
+	                "obey the audio routing of SET VIDEO (port 0xF7 of the NMS 8280): "
+	                "after a reset no external audio is mixed in until SET VIDEO "
+	                "selects it. Off: the external audio is always played",
+	                false)
 {
 	registerSound(makeConfig(motherBoard));
 	mixSetting.attach(*this);
@@ -324,9 +338,13 @@ void ExternalAudioSound::generateChannels(std::span<float*> buffers, unsigned nu
 		return;
 	}
 
-	const float SCALE = externalGain * (1.0f / 32768.0f);
+	const bool follow = followSetting.getBoolean();
+	const std::array<float, 2> scale = {
+		(!follow || routeLeft)  ? externalGain * (1.0f / 32768.0f) : 0.0f,
+		(!follow || routeRight) ? externalGain * (1.0f / 32768.0f) : 0.0f,
+	};
 	auto sample = [&](size_t index, unsigned channel) {
-		return float(scratch[index * 2 + channel]) * SCALE;
+		return float(scratch[index * 2 + channel]) * scale[channel];
 	};
 	double pos = readPos;
 	for (unsigned i = 0; i < num; ++i) {
@@ -358,6 +376,11 @@ MSXExternalAudio::MSXExternalAudio(const DeviceConfig& config)
 }
 
 MSXExternalAudio::~MSXExternalAudio() = default;
+
+void MSXExternalAudio::setRouting(bool left, bool right, EmuTime time)
+{
+	sound->setRouting(left, right, time);
+}
 
 template<typename Archive>
 void MSXExternalAudio::serialize(Archive& ar, unsigned /*version*/)
