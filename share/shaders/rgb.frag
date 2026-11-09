@@ -15,7 +15,7 @@ vec3 saturate(vec3 x)
 	return clamp(x, 0.0, 1.0);
 }
 
-void main()
+void shaderMain()
 {
 	float scan_a    = cnsts.x;
 	float scan_b_c2 = cnsts.y; // scan_b * c2
@@ -39,4 +39,15 @@ void main()
 	vec3 s_n = n * c1_2_2 + saturate((n - 1.0) / 2.0);
 	gl_FragColor.rgb = n + m * s_n;
 	gl_FragColor.a   = p.a;
+}
+
+// Without external video the video mix of the NMS 8280 halves the image.
+uniform float computerGain;
+
+void main()
+{
+	shaderMain();
+#if !SUPERIMPOSE
+	gl_FragColor.rgb *= computerGain;
+#endif
 }

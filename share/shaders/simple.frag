@@ -10,7 +10,7 @@ varying vec2 scaled;
 varying vec3 misc;
 varying vec2 videoCoord;
 
-void main()
+void shaderMain()
 {
 	float scan_a = cnst.x;
 	float scan_b = cnst.y;
@@ -31,5 +31,16 @@ void main()
 	// optimization: in case of not-superimpose, we moved the division by 2
 	// '(col1 + col2) / 2' to the 'scan_b' and 'scan_c' variables.
 	gl_FragColor = (col1 + col2) * scan;
+#endif
+}
+
+// Without external video the video mix of the NMS 8280 halves the image.
+uniform float computerGain;
+
+void main()
+{
+	shaderMain();
+#if !SUPERIMPOSE
+	gl_FragColor.rgb *= computerGain;
 #endif
 }

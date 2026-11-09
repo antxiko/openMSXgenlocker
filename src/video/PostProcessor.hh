@@ -76,6 +76,10 @@ public:
 	/** Intensity (0..1) of the external video, see VDP::isVideoDim(). */
 	void setSuperimposeVideoGain(float gain) { superImposeVideoGain = gain; }
 
+	/** Intensity (0..1) of the image of the computer when it is not
+	  * superimposed on external video, see VDP::getComputerGain(). */
+	void setComputerGain(float gain) { computerGain = gain; }
+
 	/** Set the VDP frame on which to superimpose the 'normal' output of
 	  * this PostProcessor. This is similar to the method above, except
 	  * that now the superimposing is done before scaling. IOW both frames
@@ -176,6 +180,7 @@ private:
 	const FrameSource* superImposeVdpFrame = nullptr;
 	int superImposeMix = 0;
 	float superImposeVideoGain = 1.0f;
+	float computerGain = 1.0f;
 
 	int interleaveCount = 0; // for interleave-black-frame
 	int lastFramesCount = 0; // How many items in lastFrames[] are up-to-date

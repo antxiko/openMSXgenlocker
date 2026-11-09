@@ -14,7 +14,7 @@ varying vec2 weightPos;
 varying vec2 texStep2; // could be uniform
 varying vec2 videoCoord;
 
-void main()
+void shaderMain()
 {
 	// 12-bit edge information encoded as 64x64 texture-coordinate
 	vec2 xy = texture2D(edgeTex, edgePos).ra;
@@ -36,5 +36,16 @@ void main()
 	gl_FragColor = mix(vid, col, superAlpha(col.a));
 #else
 	gl_FragColor = col;
+#endif
+}
+
+// Without external video the video mix of the NMS 8280 halves the image.
+uniform float computerGain;
+
+void main()
+{
+	shaderMain();
+#if !SUPERIMPOSE
+	gl_FragColor.rgb *= computerGain;
 #endif
 }

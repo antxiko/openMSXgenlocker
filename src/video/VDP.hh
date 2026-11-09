@@ -205,6 +205,12 @@ public:
 	[[nodiscard]] bool isVideoDim() const { return videoDim; }
 	void setVideoDim(bool value) { videoDim = value; }
 
+	/** Gain (0..1) of the image of the computer when it is shown on its own
+	  * (internal sync): the video mix of the NMS 8280 (bit 5 of port 0xF6)
+	  * halves it. Fixed per frame.
+	  */
+	[[nodiscard]] float getComputerGain() const { return computerGain; }
+
 	/** How the VDP image is combined with the external video this frame:
 	  * 0 = normal (alpha, color 0 transparent), 1 = superimpose at 50%
 	  * (transparent areas stay full video), 2 = 50/50 mix of the complete
@@ -1293,6 +1299,7 @@ private:
 	const RawFrame* superimposing;
 	bool videoMix = false;
 	bool videoDim = false;
+	float computerGain = 1.0f;
 	int superimposeMixMode = 0;
 
 	/** The emulation time when this frame was started (vsync).

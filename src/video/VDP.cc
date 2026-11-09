@@ -774,6 +774,9 @@ void VDP::frameStart(EmuTime time)
 	// images are shown half-for-half; when superimposing (TP = 0,
 	// SET VIDEO 2) the computer image is halved over the full video.
 	superimposeMixMode = 0;
+	// Video mix without external sync (SET VIDEO 0): the image of the computer
+	// alone, at half its intensity.
+	computerGain = (videoMix && !isMSX1VDP() && ((controlRegs[9] & 0x30) == 0x00)) ? 0.5f : 1.0f;
 	// External video only: R#9 S1:S0 = 10 (SET VIDEO 3), or the color bus in
 	// input mode (R#8 CB = 1, MS = 0), in the bitmap modes.
 	const auto base = displayMode.getBase();

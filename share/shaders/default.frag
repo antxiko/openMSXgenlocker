@@ -7,7 +7,7 @@ float superAlpha(float a) { return superMix > 2.5 ? 0.0 : (superMix > 1.5 ? 0.5 
 varying vec2 texCoord;
 varying vec2 videoCoord;
 
-void main()
+void shaderMain()
 {
 #if SUPERIMPOSE
 	vec4 col = texture2D(tex, texCoord);
@@ -16,5 +16,16 @@ void main()
 	gl_FragColor = mix(vid, col, superAlpha(col.a));
 #else
 	gl_FragColor = texture2D(tex, texCoord);
+#endif
+}
+
+// Without external video the video mix of the NMS 8280 halves the image.
+uniform float computerGain;
+
+void main()
+{
+	shaderMain();
+#if !SUPERIMPOSE
+	gl_FragColor.rgb *= computerGain;
 #endif
 }

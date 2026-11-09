@@ -56,6 +56,9 @@ public:
 	/** Intensity (0..1) of the superimposed external video. */
 	void setSuperimposeVideoGain(float gain) { videoGain = gain; }
 
+	/** Intensity of the image when there is no external video (video mix). */
+	void setComputerGain(float gain) { computerGain = gain; }
+
 protected:
 	explicit GLScaler(const std::string& progName);
 
@@ -94,8 +97,10 @@ protected:
 	std::array<GLint, 2> unifMvpMatrix;
 	std::array<GLint, 2> unifSuperMix;
 	std::array<GLint, 2> unifVideoGain;
+	std::array<GLint, 2> unifComputerGain;
 	int superMix = 0;
 	float videoGain = 1.0f;
+	float computerGain = 1.0f;
 };
 
 } // namespace openmsx

@@ -32,7 +32,7 @@ vec4 scaleNx()
 	}
 }
 
-void main()
+void shaderMain()
 {
 #if SUPERIMPOSE
 	vec4 col = scaleNx();
@@ -41,5 +41,16 @@ void main()
 	gl_FragColor = mix(vid, col, superAlpha(col.a));
 #else
 	gl_FragColor = scaleNx();
+#endif
+}
+
+// Without external video the video mix of the NMS 8280 halves the image.
+uniform float computerGain;
+
+void main()
+{
+	shaderMain();
+#if !SUPERIMPOSE
+	gl_FragColor.rgb *= computerGain;
 #endif
 }

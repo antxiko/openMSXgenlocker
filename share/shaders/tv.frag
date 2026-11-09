@@ -30,7 +30,7 @@ vec4 calcCorner(const vec2 texCoord0,
 		vec4(dist));
 }
 
-void main()
+void shaderMain()
 {
 	vec4 distComp = fract(intCoord);
 	gl_FragColor = mix(
@@ -39,4 +39,15 @@ void main()
 		calcCorner(cornerCoord0.zy, cornerCoord1.zy, distComp.w) +
 		calcCorner(cornerCoord0.zw, cornerCoord1.zw, distComp.y),
 		smoothstep(0.0, 1.0, distComp.x));
+}
+
+// Without external video the video mix of the NMS 8280 halves the image.
+uniform float computerGain;
+
+void main()
+{
+	shaderMain();
+#if !SUPERIMPOSE
+	gl_FragColor.rgb *= computerGain;
+#endif
 }
