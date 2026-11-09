@@ -946,7 +946,10 @@ void VDP::digitizeExternalVideo(const RawFrame& frame, EmuTime time)
 				}
 			}
 			if (count == 0) continue;
-			const int r = int(sumR / count), g = int(sumG / count), b = int(sumB / count);
+			auto level = [&](unsigned sum) {
+				return std::min(255, int(float(sum / count) * videoLevel));
+			};
+			const int r = level(sumR), g = level(sumG), b = level(sumB);
 
 			unsigned value;
 			if (bitsPerPixel == 8) { // GRB 3-3-2

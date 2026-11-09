@@ -46,6 +46,7 @@ private:
 	void paintShortcut();
 	void paintEditShortcut();
 	void paintExternalVideo();
+	void paintFrontPanel();
 	void refreshExternalVideoDevices();
 	void refreshExternalAudioDevices();
 	void startExternalVideo();
@@ -88,6 +89,7 @@ private:
 
 	std::vector<FontInfo> availableFonts;
 	bool showExternalVideo = false;
+	bool showFrontPanel = false;
 	int externalVideoSource = 0; // 0: capture device, 1: network stream
 	std::string externalVideoDevice;
 	std::string externalVideoUrl;
@@ -111,6 +113,7 @@ private:
 	static constexpr auto persistentElements = std::tuple{
 		PersistentElement{"style", &ImGuiSettings::selectedStyle},
 		PersistentElement{"showExternalVideo", &ImGuiSettings::showExternalVideo},
+		PersistentElement{"showFrontPanel", &ImGuiSettings::showFrontPanel},
 		PersistentElement{"externalVideoSource", &ImGuiSettings::externalVideoSource},
 		PersistentElement{"externalVideoDevice", &ImGuiSettings::externalVideoDevice},
 		PersistentElement{"externalVideoPython", &ImGuiSettings::externalVideoPython},

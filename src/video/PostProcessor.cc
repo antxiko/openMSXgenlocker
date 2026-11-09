@@ -293,6 +293,7 @@ void PostProcessor::paint(OutputSurface& /*output*/)
 		                  ? &superImposeTex : nullptr;
 		currScaler->setSuperimposeMix(superImposeMix);
 		currScaler->setSuperimposeVideoGain(superImposeVideoGain);
+		currScaler->setSuperimposeComputerLevel(superImposeComputerLevel);
 		currScaler->setComputerGain(computerGain);
 		currScaler->scaleImage(
 			it->tex, superImpose,

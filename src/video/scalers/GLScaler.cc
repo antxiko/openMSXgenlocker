@@ -32,6 +32,7 @@ GLScaler::GLScaler(const std::string& progName)
 		unifSuperMix[i] = program[i].getUniformLocation("superMix");
 		unifVideoGain[i] = program[i].getUniformLocation("videoGain");
 		unifComputerGain[i] = program[i].getUniformLocation("computerGain");
+		unifComputerLevel[i] = program[i].getUniformLocation("computerLevel");
 	}
 }
 
@@ -75,6 +76,7 @@ void GLScaler::execute(
 	if (superImpose) {
 		glUniform1f(unifSuperMix[i], float(superMix));
 		glUniform1f(unifVideoGain[i], videoGain);
+		glUniform1f(unifComputerLevel[i], computerLevel);
 	}
 
 	src.bind();

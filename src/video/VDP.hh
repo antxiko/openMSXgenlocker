@@ -205,6 +205,22 @@ public:
 	[[nodiscard]] bool isVideoDim() const { return videoDim; }
 	void setVideoDim(bool value) { videoDim = value; }
 
+	/** Brightness of the external video (0..2, 1 = normal): the digitization
+	  * level slider of the NMS 8280.
+	  */
+	void setVideoLevel(float value) { videoLevel = value; }
+
+	/** The intensity (0..2) of the external video on screen: its level and
+	  * the 'Ym' dimming of SET VIDEO together.
+	  */
+	[[nodiscard]] float getVideoGain() const { return (videoDim ? 0.5f : 1.0f) * videoLevel; }
+
+	/** Intensity (0..1) of the image of the computer when it is superimposed on
+	  * the external video: the video mix slider of the NMS 8280.
+	  */
+	[[nodiscard]] float getComputerLevel() const { return computerLevel; }
+	void setComputerLevel(float value) { computerLevel = value; }
+
 	/** Gain (0..1) of the image of the computer when it is shown on its own
 	  * (internal sync): the video mix of the NMS 8280 (bit 5 of port 0xF6)
 	  * halves it. Fixed per frame.
@@ -1300,6 +1316,8 @@ private:
 	bool videoMix = false;
 	bool videoDim = false;
 	float computerGain = 1.0f;
+	float videoLevel = 1.0f;
+	float computerLevel = 1.0f;
 	int superimposeMixMode = 0;
 
 	/** The emulation time when this frame was started (vsync).

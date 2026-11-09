@@ -76,6 +76,9 @@ public:
 	/** Intensity (0..1) of the external video, see VDP::isVideoDim(). */
 	void setSuperimposeVideoGain(float gain) { superImposeVideoGain = gain; }
 
+	/** Intensity (0..1) of the VDP image over the external video. */
+	void setSuperimposeComputerLevel(float level) { superImposeComputerLevel = level; }
+
 	/** Intensity (0..1) of the image of the computer when it is not
 	  * superimposed on external video, see VDP::getComputerGain(). */
 	void setComputerGain(float gain) { computerGain = gain; }
@@ -180,6 +183,7 @@ private:
 	const FrameSource* superImposeVdpFrame = nullptr;
 	int superImposeMix = 0;
 	float superImposeVideoGain = 1.0f;
+	float superImposeComputerLevel = 1.0f;
 	float computerGain = 1.0f;
 
 	int interleaveCount = 0; // for interleave-black-frame

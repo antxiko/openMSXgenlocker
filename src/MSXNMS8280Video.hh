@@ -1,7 +1,10 @@
 #ifndef MSXNMS8280VIDEO_HH
 #define MSXNMS8280VIDEO_HH
 
+#include "BooleanSetting.hh"
+#include "IntegerSetting.hh"
 #include "MSXDevice.hh"
+#include "Observer.hh"
 #include "SimpleDebuggable.hh"
 
 namespace openmsx {
@@ -27,14 +30,24 @@ namespace openmsx {
   *    (parameter 3: R#8 bit 4, the color bus). The sub-ROM reads this port
   *    back at boot to detect the hardware.
   *  - 0xF8: audio mix control (written by the sub-ROM, shadow in 0xFFF8).
-  * The 50% video mix and the routing of the external audio (see the External
-  * Audio device) have an effect on the emulation; the other bits are just
-  * stored and can be read back.
+  * The 50% video mix, the SET VIDEO bits and the routing of the external audio
+  * (see the External Audio device) have an effect on the emulation; the other
+  * bits are just stored and can be read back.
+  *
+  * The device also holds the controls of the front panel that have no port:
+  *  - external_video_level: the digitization level slider (25), the
+  *    brightness of the external video (50 = normal, 100 = twice as bright)
+  *  - video_mix_level: the video mix slider (27), the intensity of the image of
+  *    the computer when it is superimposed (100 = GRAPHIC, 0 = only the
+  *    external video)
+  *  - av_source_euroconnector: the audio/video source selector (21), which
+  *    only lights the indicators (there is one external source)
   */
-class MSXNMS8280Video final : public MSXDevice
+class MSXNMS8280Video final : public MSXDevice, private Observer<Setting>
 {
 public:
 	explicit MSXNMS8280Video(const DeviceConfig& config);
+	~MSXNMS8280Video() override;
 
 	void reset(EmuTime time) override;
 	[[nodiscard]] byte readIO(uint16_t port, EmuTime time) override;
@@ -44,7 +57,23 @@ public:
 	template<typename Archive>
 	void serialize(Archive& ar, unsigned version);
 
+	/** The indicators of the front panel. */
+	struct Leds {
+		bool avInOut;    // (22) external source via the Euroconnector
+		bool avIn;       // (23) external source via the separate AV IN jacks
+		bool superimpose; // (24) external sync: superimposing (or the other external modes)
+	};
+	[[nodiscard]] Leds getLeds() const;
+
+	// The sliders and the switch of the front panel (settings), for the GUI.
+	[[nodiscard]] IntegerSetting& getVideoLevelSetting() { return videoLevelSetting; }
+	[[nodiscard]] IntegerSetting& getVideoMixLevelSetting() { return videoMixLevelSetting; }
+	[[nodiscard]] BooleanSetting& getEuroSourceSetting() { return euroSourceSetting; }
+
 private:
+	// Observer<Setting>
+	void update(const Setting& setting) noexcept override;
+
 	void applyVideoMix() const;
 	void applyAudioRouting(EmuTime time) const;
 
@@ -59,6 +88,10 @@ private:
 	} debuggable;
 
 private:
+	IntegerSetting videoLevelSetting;    // (25) digitization level
+	IntegerSetting videoMixLevelSetting; // (27) video mix slider
+	BooleanSetting euroSourceSetting;    // (21) audio/video source selector
+
 	byte portF6 = 0xFF;
 	byte portF7 = 0xFF;
 	byte portF8 = 0x00;

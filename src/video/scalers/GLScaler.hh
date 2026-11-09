@@ -56,6 +56,9 @@ public:
 	/** Intensity (0..1) of the superimposed external video. */
 	void setSuperimposeVideoGain(float gain) { videoGain = gain; }
 
+	/** Intensity (0..1) of the image over the superimposed external video. */
+	void setSuperimposeComputerLevel(float level) { computerLevel = level; }
+
 	/** Intensity of the image when there is no external video (video mix). */
 	void setComputerGain(float gain) { computerGain = gain; }
 
@@ -98,9 +101,11 @@ protected:
 	std::array<GLint, 2> unifSuperMix;
 	std::array<GLint, 2> unifVideoGain;
 	std::array<GLint, 2> unifComputerGain;
+	std::array<GLint, 2> unifComputerLevel;
 	int superMix = 0;
 	float videoGain = 1.0f;
 	float computerGain = 1.0f;
+	float computerLevel = 1.0f;
 };
 
 } // namespace openmsx
